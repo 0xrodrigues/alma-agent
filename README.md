@@ -30,10 +30,13 @@ skill para nesse ponto e avisa explicitamente.
 ## Estrutura deste repo
 
 ```
-skill/
+alma/
 ├── SKILL.md      # comportamento do agente ("soul") — o que cada ação faz, regras gerais
 └── config.json   # kb_path, kb_remote, sync_enabled (ver Configuração abaixo)
 ```
+
+Pasta se chama `alma/` (não `skill/`) de propósito — Claude Code exige que o nome da pasta
+bata com o `name:` do frontmatter do `SKILL.md`.
 
 `SKILL.md` e `config.json` aqui são a **fonte de verdade**, versionada. O Claude Code lê a skill
 de `~/.claude/skills/alma/` — os arquivos lá são **symlinks** pra esses dois arquivos deste repo,
@@ -46,11 +49,11 @@ então editar aqui já reflete em qualquer sessão, sem precisar reinstalar nada
 
    ```bash
    mkdir -p ~/.claude/skills/alma
-   ln -s /caminho/para/alma-agent/skill/SKILL.md    ~/.claude/skills/alma/SKILL.md
-   ln -s /caminho/para/alma-agent/skill/config.json ~/.claude/skills/alma/config.json
+   ln -s /caminho/para/alma-agent/alma/SKILL.md    ~/.claude/skills/alma/SKILL.md
+   ln -s /caminho/para/alma-agent/alma/config.json ~/.claude/skills/alma/config.json
    ```
 
-3. Edite `skill/config.json` com os caminhos/URLs do seu ambiente:
+3. Edite `alma/config.json` com os caminhos/URLs do seu ambiente:
 
    ```json
    {
