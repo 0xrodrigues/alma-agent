@@ -16,7 +16,7 @@ Claude Code, em qualquer repo aberto.
 
 | Ação | O que faz |
 |---|---|
-| `/alma document <caminho/descrição>` | Lê um componente do repo atual (endpoint, scheduled job, consumer), entende o que faz (técnica e negócio), escreve/atualiza entrada em `alma-kb` e deixa um ponteiro curto (`docs/ALMA.md`) no repo do serviço. |
+| `/alma document <caminho/descrição ou URL de repo>` | Lê um componente (endpoint, scheduled job, consumer) do repo atual **ou** de uma URL git — nesse caso clona raso numa pasta temporária (`~/.alma/tmp`), analisa, e apaga o clone assim que a KB é atualizada. Entende o que o componente faz (técnica e negócio), escreve/atualiza entrada em `alma-kb` e, se o repo estiver aberto localmente, deixa um ponteiro curto (`docs/ALMA.md`) nele. |
 | `/alma ask <pergunta>` | Responde sobre processo/produto do negócio, buscando primeiro na `alma-kb` e conferindo (drift-check) contra o código atual do repo aberto. |
 | `/alma refine <história/solução>` | Cruza uma história ou solução rascunhada com a KB e o código atual, devolve critérios de aceite, perguntas em aberto e riscos. |
 
@@ -59,7 +59,9 @@ então editar aqui já reflete em qualquer sessão, sem precisar reinstalar nada
    {
      "kb_path": "/caminho/local/para/alma-kb",
      "kb_remote": "https://github.com/<org>/alma-kb.git",
-     "sync_enabled": false
+     "sync_enabled": false,
+     "tmp_clone_path": "~/.alma/tmp",
+     "tmp_clone_ttl_hours": 24
    }
    ```
 
@@ -70,15 +72,22 @@ então editar aqui já reflete em qualquer sessão, sem precisar reinstalar nada
      commita local). `true`: antes de cada ação a skill sincroniza (`pull`, ou `clone` se
      `kb_path` ainda não existir) e, depois de escrever, faz commit + push pro remoto — assim o
      time todo vê a atualização, não só quem rodou o comando.
+   - `tmp_clone_path` — onde `/alma document <URL>` clona repos temporariamente pra analisar.
+     Apagado logo depois de atualizar a KB; `tmp_clone_ttl_hours` é só a rede de segurança pra
+     limpar sobra de execução interrompida.
 
-4. Se o diretório da KB ficar fora do repo em que você normalmente trabalha, adicione-o em
+4. Adicione `kb_path`, o path deste repo (`alma-agent`) e `tmp_clone_path` em
    `permissions.additionalDirectories` no `~/.claude/settings.json` global (senão o Claude Code
    bloqueia leitura/escrita fora do working directory da sessão):
 
    ```json
    {
      "permissions": {
-       "additionalDirectories": ["/caminho/local/para/alma-kb", "/caminho/local/para/alma-agent"]
+       "additionalDirectories": [
+         "/caminho/local/para/alma-kb",
+         "/caminho/local/para/alma-agent",
+         "/caminho/local/para/.alma/tmp"
+       ]
      }
    }
    ```

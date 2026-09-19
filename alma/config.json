@@ -1,5 +1,7 @@
 {
   "kb_path": "/Users/batman/workspace/alma-kb",
   "kb_remote": "https://github.com/0xrodrigues/alma-kb.git",
-  "sync_enabled": false
+  "sync_enabled": false,
+  "tmp_clone_path": "/Users/batman/.alma/tmp",
+  "tmp_clone_ttl_hours": 24
 }

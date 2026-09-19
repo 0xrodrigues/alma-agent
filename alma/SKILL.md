@@ -14,7 +14,11 @@ diz isso explicitamente ("não encontrado na KB, confirmar com o time") em vez d
 
 ## Antes de qualquer ação
 
-1. Leia `config.json` deste skill: `kb_path`, `kb_remote`, `sync_enabled`.
+1. Leia `config.json` deste skill: `kb_path`, `kb_remote`, `sync_enabled`, `tmp_clone_path`,
+   `tmp_clone_ttl_hours`.
+1b. Limpeza: se `tmp_clone_path` existir, apague (`rm -rf`) qualquer subpasta dele mais velha
+    que `tmp_clone_ttl_hours` — sobra de execução anterior interrompida antes de deletar o
+    clone. Best-effort, não trava a ação atual se falhar.
 2. Se `sync_enabled` for `false` (ou ausente): use `kb_path` como está, modo 100% local — nunca
    rode `git pull`/`clone`/`push` na KB, mesmo que `kb_remote` já tenha uma URL guardada (é só
    reserva pra quando o time aprovar o repo remoto).
@@ -37,26 +41,36 @@ O argumento recebido pelo comando `/alma` vem no formato `<ação> <alvo>`. Aç�
 4. Nada encontrado → diga isso claramente, não invente. Ofereça criar a entrada se o usuário
    explicar a resposta agora.
 
-## Ação: document `<caminho ou descrição do componente>`
+## Ação: document `<caminho/descrição do componente OU URL de um repositório git>`
 
-1. No repo atual, localize o componente (Read/Grep/Bash): endpoint, scheduled job, ou queue
-   consumer. Trace dependências (chamadas, tabelas, filas, serviços externos).
+0. **Se `<alvo>` for URL de repositório** (GitHub ou outro git remoto): clone raso
+   (`git clone --depth 1 <url> <tmp_clone_path>/<nome-repo>-<timestamp>`) antes de prosseguir.
+   Todo o trabalho de leitura/análise passa a ser dentro dessa pasta temporária. Se `<alvo>` for
+   um caminho local (repo já aberto na sessão), segue direto pro passo 1, sem clone.
+1. No repo (atual, ou o clone temporário do passo 0), localize o componente (Read/Grep/Bash):
+   endpoint, scheduled job, ou queue consumer. Trace dependências (chamadas, tabelas, filas,
+   serviços externos).
 2. Classifique o tipo do componente.
 3. Verifique no `INDEX.md` se já existe entrada pra esse serviço/componente:
    - Existe → atualize o arquivo existente em `<kb_path>/kb/services/`, não crie duplicata.
    - Não existe → copie `<kb_path>/_templates/service.md`, preencha frontmatter e seções.
 4. Atualize `<kb_path>/INDEX.md` (uma linha, na seção `## services`).
-5. No repo atual (do serviço), não copie a doc inteira — crie/atualize só um ponteiro curto em
-   `docs/ALMA.md` linkando pro arquivo em `alma-kb` (URL do repo remoto:
-   `https://github.com/0xrodrigues/alma-kb/blob/main/<caminho>`). Publicação real via PR
-   (GitHub) e no Confluence fica pendente até esses fluxos serem configurados — avise
-   explicitamente que essa parte ainda não está automatizada.
+5. Ponteiro no repo do serviço (`docs/ALMA.md`, linkando pro arquivo em `alma-kb`):
+   - Repo local já aberto na sessão → crie/atualize o ponteiro normalmente.
+   - Repo veio de clone temporário (passo 0) → **não dá** pra persistir o ponteiro sem publicar
+     via PR (o clone vai ser apagado). Pule esse passo e avise que o ponteiro fica pendente até
+     a automação de PR existir.
+   Publicação real via PR (GitHub) e no Confluence fica pendente até esses fluxos serem
+   configurados — avise explicitamente que essa parte ainda não está automatizada.
 6. Se `sync_enabled` for `true`, faça commit + push pro remoto (`git -C <kb_path> add -A &&
    git -C <kb_path> commit -m "..." && git -C <kb_path> push`) — assim o time todo enxerga a
    atualização, não só quem rodou o comando. Se `sync_enabled` for `false`, só commite local
    (sem push) — a KB ainda não tem remoto de verdade em uso.
 7. Se o componente tocar processo de negócio maior (ex: depende de outro produto/regra),
    crie ou atualize também uma entrada em `kb/processes/` linkando os dois.
+8. **Se usou clone temporário no passo 0**, delete a pasta (`rm -rf`) agora que a KB já foi
+   atualizada — o código do serviço em si não serve pra mais nada depois de extraído o
+   conhecimento. Não deixe o clone parado esperando o TTL da limpeza automática.
 
 ## Ação: refine `<história ou solução rascunhada>`
 
