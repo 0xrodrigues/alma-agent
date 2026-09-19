@@ -61,7 +61,9 @@ então editar aqui já reflete em qualquer sessão, sem precisar reinstalar nada
      "kb_remote": "https://github.com/<org>/alma-kb.git",
      "sync_enabled": false,
      "tmp_clone_path": "~/.alma/tmp",
-     "tmp_clone_ttl_hours": 24
+     "tmp_clone_ttl_hours": 24,
+     "state_path": "~/.alma/state",
+     "pull_debounce_minutes": 5
    }
    ```
 
@@ -75,8 +77,11 @@ então editar aqui já reflete em qualquer sessão, sem precisar reinstalar nada
    - `tmp_clone_path` — onde `/alma document <URL>` clona repos temporariamente pra analisar.
      Apagado logo depois de atualizar a KB; `tmp_clone_ttl_hours` é só a rede de segurança pra
      limpar sobra de execução interrompida.
+   - `state_path` / `pull_debounce_minutes` — com `sync_enabled: true`, evita `git pull` a cada
+     chamada: só busca de novo se passou mais que `pull_debounce_minutes` desde o último pull
+     (timestamp guardado em `state_path`). Corta round-trip de rede redundante em uso normal.
 
-4. Adicione `kb_path`, o path deste repo (`alma-agent`) e `tmp_clone_path` em
+4. Adicione `kb_path`, o path deste repo (`alma-agent`), `tmp_clone_path` e `state_path` em
    `permissions.additionalDirectories` no `~/.claude/settings.json` global (senão o Claude Code
    bloqueia leitura/escrita fora do working directory da sessão):
 
@@ -86,7 +91,8 @@ então editar aqui já reflete em qualquer sessão, sem precisar reinstalar nada
        "additionalDirectories": [
          "/caminho/local/para/alma-kb",
          "/caminho/local/para/alma-agent",
-         "/caminho/local/para/.alma/tmp"
+         "/caminho/local/para/.alma/tmp",
+         "/caminho/local/para/.alma/state"
        ]
      }
    }

@@ -15,16 +15,22 @@ diz isso explicitamente ("não encontrado na KB, confirmar com o time") em vez d
 ## Antes de qualquer ação
 
 1. Leia `config.json` deste skill: `kb_path`, `kb_remote`, `sync_enabled`, `tmp_clone_path`,
-   `tmp_clone_ttl_hours`.
+   `tmp_clone_ttl_hours`, `state_path`, `pull_debounce_minutes`.
 1b. Limpeza: se `tmp_clone_path` existir, apague (`rm -rf`) qualquer subpasta dele mais velha
     que `tmp_clone_ttl_hours` — sobra de execução anterior interrompida antes de deletar o
     clone. Best-effort, não trava a ação atual se falhar.
 2. Se `sync_enabled` for `false` (ou ausente): use `kb_path` como está, modo 100% local — nunca
    rode `git pull`/`clone`/`push` na KB, mesmo que `kb_remote` já tenha uma URL guardada (é só
    reserva pra quando o time aprovar o repo remoto).
-3. Se `sync_enabled` for `true`:
-   - `kb_path` já existe como clone git → rode `git -C <kb_path> pull` antes de usar.
-   - `kb_path` não existe ainda → `git clone <kb_remote> <kb_path>` primeiro.
+3. Se `sync_enabled` for `true` — **debounce antes de puxar rede**:
+   - Leia `<state_path>/last_pull` (timestamp, se existir). Se a diferença pro agora for menor
+     que `pull_debounce_minutes`, **pule o pull** — usa `kb_path` como está, sem tocar rede.
+   - Senão: `kb_path` já existe como clone git → `git -C <kb_path> pull`. Não existe ainda →
+     `git clone <kb_remote> <kb_path>`. Em qualquer um dos dois casos, grave o timestamp atual
+     em `<state_path>/last_pull` depois.
+   - Isso é só cache de leitura: se acabou de escrever na KB (fim de `document`/`refine` com
+     `sync_enabled: true`), o commit+push já deixa o local atualizado — não precisa de pull
+     extra, mas atualize `last_pull` mesmo assim pra manter o debounce coerente.
 4. Leia `<kb_path>/INDEX.md` inteiro — é pequeno, dá visão geral do que já existe antes
    de responder ou criar qualquer coisa nova.
 

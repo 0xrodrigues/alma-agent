@@ -3,5 +3,7 @@
   "kb_remote": "https://github.com/0xrodrigues/alma-kb.git",
   "sync_enabled": false,
   "tmp_clone_path": "/Users/batman/.alma/tmp",
-  "tmp_clone_ttl_hours": 24
+  "tmp_clone_ttl_hours": 24,
+  "state_path": "/Users/batman/.alma/state",
+  "pull_debounce_minutes": 5
 }
